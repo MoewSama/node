@@ -179,7 +179,6 @@ func ApplyManual(cert *database.Cert, certContent, keyContent string) error {
 func setDNSProvider(client *lego.Client, dns *database.DnsAccount) error {
 	opts := []dns01.ChallengeOption{
 		dns01.AddRecursiveNameservers([]string{"1.1.1.1:53", "8.8.8.8:53"}),
-		dns01.DisableAuthoritativeNssPropagationRequirement(),
 	}
 
 	switch dns.Provider {
