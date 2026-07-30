@@ -55,36 +55,27 @@ else
 fi
 
 step "检测最新版本"
-RELEASE=$(curl -s "https://api.github.com/repos/slinxlink/node/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+RELEASE=$(curl -s "https://api.github.com/repos/MoewSama/node/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 if [[ -z "$RELEASE" ]]; then
     echo -e "${RED}获取版本号失败${PLAIN}"
     exit 1
 fi
 echo -e "${PINK}最新版本: ${RELEASE}${PLAIN}"
 
-step "检测最新 sing-box 核心版本"
-CORE_VERSION=$(curl -s "https://api.github.com/repos/slinxlink/node/releases" | grep '"tag_name"' | grep 'sing-box-' | head -1 | sed 's/.*"sing-box-\(.*\)".*/\1/')
-if [[ -z "$CORE_VERSION" ]]; then
-    echo -e "${RED}获取 sing-box 版本号失败${PLAIN}"
-    exit 1
-fi
-echo -e "${PINK}sing-box 版本: ${CORE_VERSION}${PLAIN}"
-
-step "创建目录"
+step "下载 slinx"
+systemctl stop slinx.service 2>/dev/null || true
 SLINX_DIR="/etc/slinx"
 BIN_DIR="$SLINX_DIR/bin"
 DATA_DIR="$SLINX_DIR/data"
 CERT_DIR="$SLINX_DIR/cert"
 mkdir -p $BIN_DIR $DATA_DIR $CERT_DIR
 
-step "下载 slinx"
-systemctl stop slinx.service 2>/dev/null || true
-SLINX_URL="https://github.com/slinxlink/node/releases/download/${RELEASE}/slinx_linux_${SLINX_ARCH}"
+SLINX_URL="https://github.com/MoewSama/node/releases/download/${RELEASE}/slinx_linux_${SLINX_ARCH}"
 curl -fLo $SLINX_DIR/slinx $SLINX_URL
 chmod +x $SLINX_DIR/slinx
 
 step "下载 sing-box"
-SINGBOX_URL="https://github.com/slinxlink/node/releases/download/sing-box-${CORE_VERSION}/sing-box_linux_${SLINX_ARCH}.gz"
+SINGBOX_URL="https://github.com/MoewSama/node/releases/download/${RELEASE}/sing-box_linux_${SLINX_ARCH}.gz"
 curl -fLo /tmp/sing-box.gz $SINGBOX_URL
 gunzip /tmp/sing-box.gz
 mv /tmp/sing-box $BIN_DIR/sing-box
