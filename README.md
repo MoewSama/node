@@ -3,12 +3,12 @@
   <h1>SLINX node</h1>
   <p>基于 sing-box 核心的节点管理面板</p>
 
-  [![Release](https://img.shields.io/github/v/release/slinxlink/node)](https://github.com/slinxlink/node/releases)
-  [![Go Version](https://img.shields.io/github/go-mod/go-version/slinxlink/node.svg)](https://github.com/slinxlink/node)
-  [![Downloads](https://img.shields.io/github/downloads/slinxlink/node/total.svg)](https://github.com/slinxlink/node/releases/latest)
+  [![Release](https://img.shields.io/github/v/release/MoewSama/node)](https://github.com/MoewSama/node/releases)
+  [![Go Version](https://img.shields.io/github/go-mod/go-version/MoewSama/node.svg)](https://github.com/MoewSama/node)
+  [![Downloads](https://img.shields.io/github/downloads/MoewSama/node/total.svg)](https://github.com/MoewSama/node/releases/latest)
   [![License](https://img.shields.io/badge/license-MIT-blue.svg?longCache=true)](LICENSE)
-  [![Go Reference](https://pkg.go.dev/badge/github.com/slinxlink/node.svg)](https://pkg.go.dev/github.com/slinxlink/node)
-  [![Go Report Card](https://goreportcard.com/badge/github.com/slinxlink/node)](https://goreportcard.com/report/github.com/slinxlink/node)
+  [![Go Reference](https://pkg.go.dev/badge/github.com/MoewSama/node.svg)](https://pkg.go.dev/github.com/MoewSama/node)
+  [![Go Report Card](https://goreportcard.com/badge/github.com/MoewSama/node)](https://goreportcard.com/report/github.com/MoewSama/node)
 </div>
 
 > [!IMPORTANT]
@@ -17,7 +17,7 @@
 ## 安装
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/slinxlink/node/main/install.sh)
+bash <(curl -sL https://raw.githubusercontent.com/MoewSama/node/main/install.sh)
 ```
 
 安装完成后使用 `slinx` 命令管理面板。
