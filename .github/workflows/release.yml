@@ -56,6 +56,10 @@ jobs:
           upx --best dist/slinx_linux_arm64 || echo "upx skipped (non-fatal)"
 
       # ── sing-box 核心 ──────────────────────────────────────────
+      - name: Prepare sing-box dependencies
+        run: |
+          go get github.com/sagernet/sing-box/cmd/sing-box@v1.13.13
+
       - name: Build sing-box linux/amd64
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
