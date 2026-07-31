@@ -102,7 +102,7 @@ func ResetConfig(c *gin.Context) {
 		LogPath:           "data/slinx.log",
 		BBR:               true,
 		BoardEnable:       false,
-		Repo:              "https://github.com/slinxlink/node",
+		Repo:              "https://github.com/MoewSama/node",
 	}
 	config.ID = prev.ID
 
