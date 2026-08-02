@@ -377,7 +377,7 @@ func checkDisney() UnlockResult {
 		return UnlockResult{Platform: "disney", Status: "false"}
 	}
 	if inSupported == "false" {
-		return UnlockResult{Platform: "disney", Status: "restricted", Region: strings.ToUpper(region)}
+		return UnlockResult{Platform: "disney", Status: "false", Region: strings.ToUpper(region)}
 	}
 	if inSupported == "true" {
 		return UnlockResult{Platform: "disney", Status: "true", Region: strings.ToUpper(region)}

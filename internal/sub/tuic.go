@@ -30,7 +30,7 @@ func tuic(uuid string, password string, host string, inbound database.Inbound) s
 		params.Set("alpn", inbound.ALPN)
 	}
 	if inbound.Insecure {
-		params.Set("allow_insecure", "1")
+		params.Set("insecure", "1")
 	}
 	if inbound.ECHEnabled && inbound.ECHConfig != "" {
 		params.Set("ech", extractECHConfig(inbound.ECHConfig))
@@ -129,9 +129,6 @@ func tuicSingBox(uuid string, password string, host string, inbound database.Inb
 	tls := map[string]any{"enabled": true}
 	if inbound.ServerName != "" {
 		tls["server_name"] = inbound.ServerName
-	}
-	if inbound.UTLS != "" {
-		tls["utls"] = map[string]any{"enabled": true, "fingerprint": inbound.UTLS}
 	}
 	if inbound.Insecure {
 		tls["insecure"] = true
