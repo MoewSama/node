@@ -38,6 +38,7 @@ func GetSubscription(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "无效的订阅链接"})
 		return
 	}
+	c.Header("Profile-Update-Interval", "24")
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte(result))
 }
 
@@ -50,7 +51,7 @@ func GetClashSubscription(c *gin.Context) {
 	}
 	c.Header("Content-Disposition",
 		fmt.Sprintf("attachment; filename*=UTF-8''%s", url.QueryEscape(name)))
-	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte(result))
+	c.Data(http.StatusOK, "text/yaml; charset=utf-8", []byte(result))
 }
 
 func GetSurgeSubscription(c *gin.Context) {
@@ -61,7 +62,7 @@ func GetSurgeSubscription(c *gin.Context) {
 		return
 	}
 	c.Header("Content-Disposition",
-		fmt.Sprintf("attachment; filename*=UTF-8''%s", url.QueryEscape(name)))
+		fmt.Sprintf("attachment; filename*=UTF-8''%s.conf", url.QueryEscape(name)))
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte(result))
 }
 

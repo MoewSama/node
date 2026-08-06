@@ -129,9 +129,6 @@ func hysteriaSingBox(password string, host string, inbound database.Inbound) str
 	if inbound.ServerName != "" {
 		tls["server_name"] = inbound.ServerName
 	}
-	if inbound.UTLS != "" {
-		tls["utls"] = map[string]any{"enabled": true, "fingerprint": inbound.UTLS}
-	}
 	if inbound.Insecure {
 		tls["insecure"] = true
 	}
