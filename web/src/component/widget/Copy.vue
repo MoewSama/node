@@ -6,15 +6,22 @@
 </template>
 
 <script setup lang="ts">
+import { copyText } from '@/util/clipboard'
+
 const props = defineProps<{
     value: string
     size?: 'sm'
 }>()
 
+const modal = inject<any>('modal')
 const copied = ref(false)
 
 async function handle() {
-    await navigator.clipboard.writeText(props.value)
+    const ok = await copyText(props.value)
+    if (!ok) {
+        modal.value.show('error', '复制失败')
+        return
+    }
     copied.value = true
     setTimeout(() => copied.value = false, 2000)
 }

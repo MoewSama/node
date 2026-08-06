@@ -42,7 +42,7 @@ func vless(uuid string, host string, inbound database.Inbound) string {
 			params.Set("alpn", inbound.ALPN)
 		}
 		if inbound.Insecure {
-			params.Set("allowInsecure", "1")
+			params.Set("insecure", "1")
 		}
 		if inbound.ECHEnabled && inbound.ECHConfig != "" {
 			params.Set("ech", extractECHConfig(inbound.ECHConfig))
