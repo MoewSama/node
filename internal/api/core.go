@@ -84,3 +84,20 @@ func GetCoreProcess(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, info)
 }
+
+func CheckCoreUpdate(c *gin.Context) {
+	result, err := core.CheckCoreUpdate()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func UpdateCoreBin(c *gin.Context) {
+	if err := core.UpdateCoreBin(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}

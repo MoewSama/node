@@ -42,6 +42,8 @@ func RegisterRoutes(r *gin.Engine) {
 		private.POST("/core/restart", RestartCore)
 		private.GET("/core/config", GetCoreConfig)
 		private.GET("/core/process", GetCoreProcess)
+		private.GET("/core/check-update", CheckCoreUpdate)
+		private.POST("/core/update", UpdateCoreBin)
 
 		// 入站
 		private.GET("/inbound", GetInbounds)
