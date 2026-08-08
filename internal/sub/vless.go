@@ -47,7 +47,7 @@ func vless(uuid string, host string, inbound database.Inbound) string {
 		if inbound.ECHEnabled && inbound.ECHConfig != "" {
 			params.Set("ech", extractECHConfig(inbound.ECHConfig))
 		}
-		if inbound.Flow != "" {
+		if inbound.Flow != "" && inbound.Transport != "websocket" {
 			params.Set("flow", inbound.Flow)
 		}
 	case "reality":
@@ -64,7 +64,7 @@ func vless(uuid string, host string, inbound database.Inbound) string {
 		if inbound.ALPN != "" {
 			params.Set("alpn", inbound.ALPN)
 		}
-		if inbound.Flow != "" {
+		if inbound.Flow != "" && inbound.Transport != "websocket" {
 			params.Set("flow", inbound.Flow)
 		}
 	default:
@@ -116,7 +116,7 @@ func vlessClash(uuid string, host string, inbound database.Inbound) string {
 		if inbound.Insecure {
 			fmt.Fprintf(&sb, "    skip-cert-verify: true\n")
 		}
-		if inbound.Flow != "" {
+		if inbound.Flow != "" && inbound.Transport != "websocket" {
 			fmt.Fprintf(&sb, "    flow: %s\n", inbound.Flow)
 		}
 	case "reality":
@@ -125,7 +125,7 @@ func vlessClash(uuid string, host string, inbound database.Inbound) string {
 		if inbound.UTLS != "" {
 			fmt.Fprintf(&sb, "    client-fingerprint: %s\n", inbound.UTLS)
 		}
-		if inbound.Flow != "" {
+		if inbound.Flow != "" && inbound.Transport != "websocket" {
 			fmt.Fprintf(&sb, "    flow: %s\n", inbound.Flow)
 		}
 		var shortIDs []string
@@ -149,7 +149,7 @@ func vlessSingBox(uuid string, host string, inbound database.Inbound) string {
 		"network":     "tcp",
 	}
 
-	if inbound.Flow != "" {
+	if inbound.Flow != "" && inbound.Transport != "websocket" {
 		out["flow"] = inbound.Flow
 	}
 

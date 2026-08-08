@@ -527,8 +527,8 @@ func buildUser(protocol, name, uuid, password, flow string, ib database.Inbound)
 		u.UUID = uuid
 	case "vless":
 		u.UUID = uuid
-		// flow 只对 VLESS + Reality 有效，其他情况不添加
-		if ib.TLSType == "reality" {
+		// flow 只对 VLESS + Reality + TCP 有效，其他情况不添加
+		if ib.TLSType == "reality" && ib.Transport != "websocket" {
 			u.Flow = flow
 		}
 	case "hysteria", "trojan", "anytls":
