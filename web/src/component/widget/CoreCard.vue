@@ -16,25 +16,42 @@
                 <i class="icon">refresh</i>
                 重启
             </button>
-            <button class="action-btn version">
-                <i class="icon">commit</i>
-                {{ core.Version }}
+            <button class="action-btn version" :disabled="!hasUpdate" :class="{ 'has-update': hasUpdate }" @click="openUpdate">
+                <i class="icon">{{ hasUpdate ? 'new_releases' : 'commit' }}</i>
+                {{ hasUpdate ? '有新核心' : core.Version }}
             </button>
         </div>
     </div>
+    <Drawer v-model="showUpdate" title="发现新核心" saveText="立即更新" @save="handleUpdate">
+        <Update :current-version="currentVersion" :latest-version="latestVersion" changelog="sing-box 核心更新" />
+    </Drawer>
 </template>
 
 <script setup lang="ts">
 import Status from '@/component/ui/Status.vue'
-import { getCore, getCoreStatus, stopCore, startCore, restartCore } from '@/api/core'
+import Drawer from '@/component/Drawer.vue'
+import Update from '@/component/widget/Update.vue'
+import { getCore, getCoreStatus, stopCore, startCore, restartCore, checkCoreUpdate, updateCoreBin } from '@/api/core'
 
+const modal = inject<any>('modal')
 const core = ref<any>({})
 const status = ref<string>('stopped')
+const hasUpdate = ref(false)
+const currentVersion = ref('')
+const latestVersion = ref('')
+const showUpdate = ref(false)
 
 async function fetch() {
     const [c, s] = await Promise.all([getCore(), getCoreStatus()])
     core.value = c
     status.value = s.status
+}
+
+async function fetchUpdate() {
+    const res = await checkCoreUpdate()
+    hasUpdate.value = res.has_update
+    currentVersion.value = res.current_version
+    latestVersion.value = res.latest_version
 }
 
 async function handleStart() {
@@ -52,8 +69,28 @@ async function handleRestart() {
     await fetch()
 }
 
+function openUpdate() {
+    showUpdate.value = true
+}
+
+async function handleUpdate() {
+    modal.value?.show('confirm', '核心更新完成后将自动重启\n确认更新？', async () => {
+        modal.value?.update('warn', '更新中...')
+        try {
+            await updateCoreBin()
+            modal.value?.update('success', '更新成功，正在重启核心...')
+            await handleRestart()
+            await fetchUpdate()
+            showUpdate.value = false
+        } catch (err: any) {
+            modal.value?.update('error', err?.error ?? '更新失败')
+        }
+    })
+}
+
 onMounted(() => {
     fetch()
+    fetchUpdate()
     const timer = setInterval(fetch, 5000)
     onUnmounted(() => clearInterval(timer))
 })

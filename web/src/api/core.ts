@@ -3,8 +3,10 @@ import { request } from '@/util/request'
 export const getCore = () => request('/api/core')
 export const updateCore = (data: any) => request('/api/core', {
     method: 'PUT',
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
 })
+export const checkCoreUpdate = () => request('/api/core/check-update')
+export const updateCoreBin = () => request('/api/core/update', { method: 'POST' })
 export const resetCore = () => request('/api/core/reset', { method: 'POST' })
 
 export const getCoreStatus = () => request('/api/core/status')
