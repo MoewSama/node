@@ -240,6 +240,15 @@ func dispatchSingBox(user database.User, inbound database.Inbound, host string) 
 
 // ── 内部工具 ─────────────────────────────────────────────────────────
 
+// formatHost 处理服务器地址：IPv6 地址加方括号，其他原样返回。
+// 用于 URI 分享链接中 host:port 的拼接。
+func formatHost(host string) string {
+	if strings.Contains(host, ":") && !strings.HasPrefix(host, "[") {
+		return "[" + host + "]"
+	}
+	return host
+}
+
 func getHost() string {
 	var config database.Config
 	database.DB.First(&config)

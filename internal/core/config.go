@@ -251,7 +251,7 @@ func generateConfig() error {
 			boardUsers = append(boardUsers, d.BoardUsers[b.ID]...)
 		}
 
-		users := buildUsers(ib.Protocol, ibUsers, boardUsers, ib.Flow)
+		users := buildUsers(ib.Protocol, ibUsers, boardUsers, ib.Flow, ib)
 		ic, err := buildInbound(ib, users)
 		if err != nil {
 			continue
@@ -506,28 +506,31 @@ func buildTLS(ib database.Inbound) *tls {
 
 // ── user builders ────────────────────────────────────────────────────────────
 
-func buildUsers(protocol string, users []database.User, boardUsers []database.BoardUser, flow string) []user {
+func buildUsers(protocol string, users []database.User, boardUsers []database.BoardUser, flow string, ib database.Inbound) []user {
 	var result []user
 	for _, u := range users {
 		if !u.Enable {
 			continue
 		}
-		result = append(result, buildUser(protocol, u.Name, u.UUID, u.Password, flow))
+		result = append(result, buildUser(protocol, u.Name, u.UUID, u.Password, flow, ib))
 	}
 	for _, u := range boardUsers {
-		result = append(result, buildUser(protocol, fmt.Sprintf("BoardUser_%d", u.UserID), u.UUID, u.Passwd, flow))
+		result = append(result, buildUser(protocol, fmt.Sprintf("BoardUser_%d", u.UserID), u.UUID, u.Passwd, flow, ib))
 	}
 	return result
 }
 
-func buildUser(protocol, name, uuid, password, flow string) user {
+func buildUser(protocol, name, uuid, password, flow string, ib database.Inbound) user {
 	u := user{Name: name}
 	switch protocol {
 	case "vmess":
 		u.UUID = uuid
 	case "vless":
 		u.UUID = uuid
-		u.Flow = flow
+		// flow 只对 VLESS + Reality 有效，其他情况不添加
+		if ib.TLSType == "reality" {
+			u.Flow = flow
+		}
 	case "hysteria", "trojan", "anytls":
 		u.Password = password
 	case "tuic":

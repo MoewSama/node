@@ -47,6 +47,9 @@ func vless(uuid string, host string, inbound database.Inbound) string {
 		if inbound.ECHEnabled && inbound.ECHConfig != "" {
 			params.Set("ech", extractECHConfig(inbound.ECHConfig))
 		}
+		if inbound.Flow != "" {
+			params.Set("flow", inbound.Flow)
+		}
 	case "reality":
 		params.Set("security", "reality")
 		params.Set("sni", inbound.RealityServerName)
@@ -70,7 +73,7 @@ func vless(uuid string, host string, inbound database.Inbound) string {
 
 	name := url.PathEscape(inbound.Name)
 
-	return "vless://" + uuid + "@" + host + ":" + port + "?" + params.Encode() + "#" + name
+	return "vless://" + uuid + "@" + formatHost(host) + ":" + port + "?" + params.Encode() + "#" + name
 }
 
 func vlessClash(uuid string, host string, inbound database.Inbound) string {
@@ -112,6 +115,9 @@ func vlessClash(uuid string, host string, inbound database.Inbound) string {
 		}
 		if inbound.Insecure {
 			fmt.Fprintf(&sb, "    skip-cert-verify: true\n")
+		}
+		if inbound.Flow != "" {
+			fmt.Fprintf(&sb, "    flow: %s\n", inbound.Flow)
 		}
 	case "reality":
 		fmt.Fprintf(&sb, "    tls: true\n")
