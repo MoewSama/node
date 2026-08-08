@@ -51,7 +51,7 @@
         </div>
     </main>
     <Drawer v-model="showInfo" :title="infoUser?.Name || '用户信息'" :footer="false">
-        <Info v-if="infoUser" :user="infoUser" :inbounds="inbounds" />
+        <Info v-if="showInfo" :key="infoUser?.ID" :user="infoUser" :inbounds="inbounds" />
     </Drawer>
     <Drawer v-model="showDrawer" :title="drawerTitle" @save="handleSave">
         <Form v-model="defaultUser" :inbounds="inbounds" />
