@@ -47,7 +47,20 @@ func CheckCoreUpdate() (*CoreUpdateResult, error) {
 		return nil, err
 	}
 
-	latest := strings.TrimPrefix(release.TagName, "v")
+	// 从资产名中提取 sing-box 版本号（sing-box-版本号_linux_arch.gz）
+	arch := runtime.GOARCH
+	prefix := "sing-box-"
+	suffix := fmt.Sprintf("_linux_%s.gz", arch)
+	latest := ""
+	for _, a := range release.Assets {
+		if strings.HasPrefix(a.Name, prefix) && strings.HasSuffix(a.Name, suffix) {
+			// 去掉前缀和后缀，中间就是版本号
+			ver := strings.TrimPrefix(a.Name, prefix)
+			ver = strings.TrimSuffix(ver, suffix)
+			latest = ver
+			break
+		}
+	}
 
 	return &CoreUpdateResult{
 		HasUpdate:      latest != "" && latest != current,
@@ -70,18 +83,19 @@ func UpdateCoreBin() error {
 		return err
 	}
 
-	// 找到对应架构的资产
+	// 找到对应架构的资产（sing-box-版本号_linux_arch.gz）
 	arch := runtime.GOARCH
-	assetName := fmt.Sprintf("sing-box_linux_%s.gz", arch)
+	prefix := fmt.Sprintf("sing-box-")
+	suffix := fmt.Sprintf("_linux_%s.gz", arch)
 	var downloadURL string
 	for _, a := range release.Assets {
-		if a.Name == assetName {
+		if strings.HasPrefix(a.Name, prefix) && strings.HasSuffix(a.Name, suffix) {
 			downloadURL = a.BrowserDownloadURL
 			break
 		}
 	}
 	if downloadURL == "" {
-		return fmt.Errorf("未找到资产: %s", assetName)
+		return fmt.Errorf("未找到资产: %s*%s", prefix, suffix)
 	}
 
 	// 获取 core 配置的 BinPath
@@ -101,7 +115,9 @@ func UpdateCoreBin() error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	gzPath := filepath.Join(tmpDir, assetName)
+	// 从下载 URL 中提取文件名
+	gzName := downloadURL[strings.LastIndex(downloadURL, "/")+1:]
+	gzPath := filepath.Join(tmpDir, gzName)
 	if err := downloadFile(downloadURL, gzPath); err != nil {
 		util.Error("[core] 下载 sing-box 失败: %v", err)
 		return fmt.Errorf("下载失败: %w", err)
@@ -112,20 +128,32 @@ func UpdateCoreBin() error {
 		return err
 	}
 
+	// 停止核心（正在运行中文件被占用无法覆盖）
+	wasRunning := Default.Status() == "running"
+	if wasRunning {
+		util.Info("[core] 核心运行中，先停止...")
+		if err := Default.Stop(); err != nil {
+			return fmt.Errorf("停止核心失败: %w", err)
+		}
+	}
+
 	// 解压 .gz 覆盖二进制
 	if err := extractGz(gzPath, binPathAbs); err != nil {
 		util.Error("[core] 解压 sing-box 失败: %v", err)
 		return fmt.Errorf("解压失败: %w", err)
 	}
 
-	// 检查解压出的二进制是否存在
-	if _, err := os.Stat(binPathAbs); err != nil {
-		return fmt.Errorf("解压后找不到二进制: %w", err)
-	}
-
 	// 设置执行权限
 	if err := os.Chmod(binPathAbs, 0755); err != nil {
 		return err
+	}
+
+	// 重新启动核心
+	if wasRunning {
+		util.Info("[core] 重新启动核心...")
+		if err := Default.Start(); err != nil {
+			return fmt.Errorf("启动核心失败: %w", err)
+		}
 	}
 
 	util.Info("[core] sing-box 核心更新成功: %s", release.TagName)
