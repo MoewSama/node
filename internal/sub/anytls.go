@@ -33,7 +33,7 @@ func anytls(password string, host string, inbound database.Inbound) string {
 	))
 
 	name := url.PathEscape(inbound.Name)
-	return "anytls://" + password + "@" + host + ":" + port + "?" + params.Encode() + "#" + name
+	return "anytls://" + password + "@" + formatHost(host) + ":" + port + "?" + params.Encode() + "#" + name
 }
 
 func anytlsClash(password string, host string, inbound database.Inbound) string {

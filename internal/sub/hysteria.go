@@ -38,7 +38,7 @@ func hysteria(password string, host string, inbound database.Inbound) string {
 
 	name := url.PathEscape(inbound.Name)
 
-	return "hysteria2://" + password + "@" + host + ":" + port + "?" + params.Encode() + "#" + name
+	return "hysteria2://" + password + "@" + formatHost(host) + ":" + port + "?" + params.Encode() + "#" + name
 }
 
 func hysteriaClash(password string, host string, inbound database.Inbound) string {

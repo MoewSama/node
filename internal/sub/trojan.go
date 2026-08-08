@@ -45,7 +45,7 @@ func trojan(password string, host string, inbound database.Inbound) string {
 	}
 
 	name := url.PathEscape(inbound.Name)
-	return "trojan://" + password + "@" + host + ":" + port + "?" + params.Encode() + "#" + name
+	return "trojan://" + password + "@" + formatHost(host) + ":" + port + "?" + params.Encode() + "#" + name
 }
 
 func trojanClash(password string, host string, inbound database.Inbound) string {

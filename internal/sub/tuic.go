@@ -38,7 +38,7 @@ func tuic(uuid string, password string, host string, inbound database.Inbound) s
 
 	name := url.PathEscape(inbound.Name)
 
-	return "tuic://" + uuid + ":" + password + "@" + host + ":" + port + "?" + params.Encode() + "#" + name
+	return "tuic://" + uuid + ":" + password + "@" + formatHost(host) + ":" + port + "?" + params.Encode() + "#" + name
 }
 
 func tuicClash(uuid string, password string, host string, inbound database.Inbound) string {
