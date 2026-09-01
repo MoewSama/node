@@ -37,16 +37,24 @@ CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc \
   -o "dist/slinx_linux_arm64" .
 
 echo "  sing-box_linux_amd64..."
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-  go build -tags 'with_v2ray_api,with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_clash_api' \
+GOBIN=$(pwd)/dist GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
+  go install -tags 'with_v2ray_api,with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_clash_api' \
   -ldflags="-s -w -X github.com/sagernet/sing-box/constant.Version=${SING_BOX_VERSION}" \
-  -o "dist/sing-box_linux_amd64" github.com/sagernet/sing-box/cmd/sing-box
+  github.com/sagernet/sing-box/cmd/sing-box@${SING_BOX_VERSION}
+mv dist/sing-box dist/sing-box_linux_amd64
 
 echo "  sing-box_linux_arm64..."
-CGO_ENABLED=0 GOOS=linux GOARCH=arm64 \
-  go build -tags 'with_v2ray_api,with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_clash_api' \
+GOOS=linux GOARCH=arm64 CGO_ENABLED=0 \
+  go install -tags 'with_v2ray_api,with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_clash_api' \
   -ldflags="-s -w -X github.com/sagernet/sing-box/constant.Version=${SING_BOX_VERSION}" \
-  -o "dist/sing-box_linux_arm64" github.com/sagernet/sing-box/cmd/sing-box
+  github.com/sagernet/sing-box/cmd/sing-box@${SING_BOX_VERSION}
+# cross 编译产物在 GOPATH/bin/linux_arm64/sing-box
+ARM_BIN=$(go env GOPATH)/bin/linux_arm64/sing-box
+if [ -f "$ARM_BIN" ]; then
+  mv "$ARM_BIN" dist/sing-box_linux_arm64
+else
+  echo "错误: 未找到 arm64 产物 $ARM_BIN"; exit 1
+fi
 
 # ── 压缩 sing-box ───────────────────────────────────────────────────
 echo "--- 压缩 sing-box ---"
