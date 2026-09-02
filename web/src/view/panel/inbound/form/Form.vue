@@ -19,11 +19,65 @@
                     { label: 'Trojan', value: 'trojan' },
                     { label: 'TUIC', value: 'tuic' },
                     { label: 'AnyTLS', value: 'anytls' },
+                    { label: 'Cloudflared', value: 'cloudflared' },
                 ]" />
             </div>
             <div class="form-row quarter">
                 <span class="form-label">端口</span>
                 <Input v-model="form.Port" type="number" :min="1" :max="65535" placeholder="1 - 65535" />
+            </div>
+        </Section>
+
+        <!-- Cloudflared -->
+        <Section title="Cloudflare Tunnel" v-if="form.Protocol === 'cloudflared'">
+            <div class="form-row">
+                <span class="form-label">Token</span>
+                <Text v-model="form.CfToken" placeholder="Cloudflare Zero Trust → Networks → Tunnels → Install connector 中的令牌" />
+            </div>
+            <div class="form-row half">
+                <span class="form-label">传输协议</span>
+                <Select v-model="form.CfProtocol" :options="[
+                    { label: '默认', value: '' },
+                    { label: 'QUIC', value: 'quic' },
+                    { label: 'HTTP/2', value: 'http2' },
+                ]" />
+            </div>
+            <div class="form-row quarter">
+                <span class="form-label">HA 连接数</span>
+                <Input v-model="form.CfHAConnections" type="number" :min="0" :max="4" placeholder="0 表示默认" />
+            </div>
+            <div class="form-row half">
+                <span class="form-label">Edge IP 版本</span>
+                <Select v-model="form.CfEdgeIPVersion" :options="[
+                    { label: '自动', value: 0 },
+                    { label: 'IPv4', value: 4 },
+                    { label: 'IPv6', value: 6 },
+                ]" />
+            </div>
+            <template v-if="form.CfProtocol === 'quic'">
+                <div class="form-row half">
+                    <span class="form-label">数据报版本</span>
+                    <Select v-model="form.CfDatagramVersion" :options="[
+                        { label: '默认', value: '' },
+                        { label: 'v2', value: 'v2' },
+                        { label: 'v3', value: 'v3' },
+                    ]" />
+                </div>
+            </template>
+            <div class="form-row">
+                <span class="form-label">后量子密钥</span>
+                <Toggle v-model="form.CfPostQuantum" />
+            </div>
+            <div class="form-row half">
+                <span class="form-label">优雅关闭</span>
+                <Input v-model="form.CfGracePeriod" placeholder="如 30s，空为默认" />
+            </div>
+            <div class="form-row half">
+                <span class="form-label">区域</span>
+                <Input v-model="form.CfRegion" placeholder="空为默认" />
+            </div>
+            <div class="form-tip">
+                入站流量经 Cloudflare 隧道进入，无需监听端口；隧道内目标地址由 Cloudflare Zero Trust 的 Public Hostname 配置决定。
             </div>
         </Section>
 
@@ -412,6 +466,13 @@ watch(() => form.value.Protocol, (val) => {
         if (val === 'hysteria' || val === 'tuic') {
             form.value.ALPN = ['h3']
         }
+    }
+}, { immediate: true })
+
+// cloudflared 不需要 TLS / 传输配置，切换到其他协议时重置安全段
+watch(() => form.value.Protocol, (val) => {
+    if (val === 'cloudflared') {
+        form.value.TLSType = 'none'
     }
 }, { immediate: true })
 

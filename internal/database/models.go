@@ -111,6 +111,16 @@ type Inbound struct {
 	WsHost         string // websocket Host header
 	WsPingInterval int    // websocket 心跳周期，秒，0 表示禁用
 
+	// Cloudflared（Cloudflare Tunnel 入站）
+	CfToken          string `gorm:"type:text"` // 隧道 Token（Cloudflare Zero Trust → Networks → Tunnels → Install connector）
+	CfHAConnections  int    // 到 edge 的 HA 连接数，0 表示默认
+	CfProtocol       string // quic / http2，空表示默认
+	CfPostQuantum    bool   // 控制连接启用后量子密钥交换
+	CfEdgeIPVersion  int    // edge IP 版本：0 自动 / 4 / 6
+	CfDatagramVersion string // v2 / v3，仅 quic 协议有效
+	CfGracePeriod    string // 优雅关闭窗口，如 30s，空表示默认
+	CfRegion         string // edge 区域选择器，空表示默认
+
 	// Hysteria
 	UDPTimeout        int    // UDP 空闲超时，秒，0 表示默认
 	MasqueradeEnabled bool   // 是否开启伪装

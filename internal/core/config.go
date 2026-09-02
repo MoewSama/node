@@ -52,8 +52,8 @@ type clashAPI struct {
 type inbounds struct {
 	Type              string      `json:"type"`
 	Tag               string      `json:"tag"`
-	Listen            string      `json:"listen"`
-	Port              int         `json:"listen_port"`
+	Listen            string      `json:"listen,omitempty"`
+	Port              int         `json:"listen_port,omitempty"`
 	UDPTimeout        string      `json:"udp_timeout,omitempty"`
 	Transport         *transport  `json:"transport,omitempty"`
 	Masquerade        interface{} `json:"masquerade,omitempty"`
@@ -64,6 +64,15 @@ type inbounds struct {
 	Heartbeat         string      `json:"heartbeat,omitempty"`
 	TLS               *tls        `json:"tls,omitempty"`
 	Users             []user      `json:"users,omitempty"`
+	// Cloudflared
+	Token             string `json:"token,omitempty"`
+	HAConnections     int    `json:"ha_connections,omitempty"`
+	CfProtocol        string `json:"protocol,omitempty"`
+	PostQuantum       bool   `json:"post_quantum,omitempty"`
+	EdgeIPVersion     int    `json:"edge_ip_version,omitempty"`
+	DatagramVersion   string `json:"datagram_version,omitempty"`
+	GracePeriod       string `json:"grace_period,omitempty"`
+	CfRegion          string `json:"region,omitempty"`
 }
 
 type transport struct {
@@ -308,6 +317,8 @@ func buildInbound(ib database.Inbound, users []user) (inbounds, error) {
 		return buildTuic(ib, users)
 	case "anytls":
 		return buildAnytls(ib, users)
+	case "cloudflared":
+		return buildCloudflared(ib)
 	}
 	return inbounds{}, fmt.Errorf("unsupported protocol: %s", ib.Protocol)
 }
@@ -365,6 +376,28 @@ func buildAnytls(ib database.Inbound, users []user) (inbounds, error) {
 	ic := buildBase(ib)
 	ic.TLS = buildTLS(ib)
 	ic.Users = users
+	return ic, nil
+}
+
+func buildCloudflared(ib database.Inbound) (inbounds, error) {
+	if ib.CfToken == "" {
+		return inbounds{}, fmt.Errorf("cloudflared: token 不能为空")
+	}
+	ic := inbounds{
+		Type: "cloudflared",
+		Tag:  fmt.Sprintf("%d", ib.Port),
+		// cloudflared 不监听本地端口，Tag 用 Port 字段占位保持与其他入站一致的标识方式
+		// cloudflared 不监听本地端口，listen 留空会生成 "listen": "" 触发 unknown field，
+	// 这里用独立 builder 完全绕开 Listen 字段
+	Token:           ib.CfToken,
+		HAConnections:   ib.CfHAConnections,
+		CfProtocol:      ib.CfProtocol,
+		PostQuantum:     ib.CfPostQuantum,
+		EdgeIPVersion:   ib.CfEdgeIPVersion,
+		DatagramVersion: ib.CfDatagramVersion,
+		GracePeriod:     ib.CfGracePeriod,
+		CfRegion:        ib.CfRegion,
+	}
 	return ic, nil
 }
 

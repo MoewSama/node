@@ -16,9 +16,9 @@
                             <div class="tags">
                                 <span class="tag primary">{{ ib.Protocol }}</span>
                                 <span class="tag green">
-                                    {{ ib.Protocol === 'hysteria' || ib.Protocol === 'tuic' ? 'UDP' : (ib.Transport === 'websocket' ? 'WS' : 'TCP') }}
+                                    {{ ib.Protocol === 'cloudflared' ? 'Tunnel' : (ib.Protocol === 'hysteria' || ib.Protocol === 'tuic' ? 'UDP' : (ib.Transport === 'websocket' ? 'WS' : 'TCP')) }}
                                 </span>
-                                <span v-if="ib.TLSType !== 'none'" class="tag blue">{{ formatTLS(ib.TLSType) }}</span>
+                                <span v-if="ib.Protocol !== 'cloudflared' && ib.TLSType !== 'none'" class="tag blue">{{ formatTLS(ib.TLSType) }}</span>
                             </div>
                         </td>
                         <td>
@@ -71,6 +71,15 @@ const baseInbound = () => ({
     WsPath: '/',
     WsHost: '',
     WsPingInterval: 0,
+
+    CfToken: '',
+    CfHAConnections: 0,
+    CfProtocol: '',
+    CfPostQuantum: false,
+    CfEdgeIPVersion: 0,
+    CfDatagramVersion: '',
+    CfGracePeriod: '',
+    CfRegion: '',
 
     UDPTimeout: 60,
     MasqueradeEnabled: false,

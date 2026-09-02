@@ -34,6 +34,33 @@ func SaveInbound(c *gin.Context) {
 		return
 	}
 
+	if ib.Protocol == "cloudflared" {
+		if ib.CfToken == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "请填写 Cloudflare Tunnel Token"})
+			return
+		}
+		if ib.CfProtocol != "" && ib.CfProtocol != "quic" && ib.CfProtocol != "http2" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "protocol 仅支持 quic / http2"})
+			return
+		}
+		if ib.CfEdgeIPVersion != 0 && ib.CfEdgeIPVersion != 4 && ib.CfEdgeIPVersion != 6 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "edge_ip_version 仅支持 0(自动) / 4 / 6"})
+			return
+		}
+		if ib.CfDatagramVersion != "" && ib.CfDatagramVersion != "v2" && ib.CfDatagramVersion != "v3" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "datagram_version 仅支持 v2 / v3"})
+			return
+		}
+		if ib.CfDatagramVersion != "" && ib.CfProtocol != "quic" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "datagram_version 仅在 protocol 为 quic 时有效"})
+			return
+		}
+		if ib.CfHAConnections < 0 || ib.CfHAConnections > 4 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "HA 连接数须在 0-4 之间（0 表示默认）"})
+			return
+		}
+	}
+
 	if ib.ObfsType != "" {
 		if ib.ObfsPassword == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "请填写混淆密码"})
