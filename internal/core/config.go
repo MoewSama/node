@@ -319,8 +319,16 @@ func generateConfig() error {
 		cfg.Endpoints = append(cfg.Endpoints, ec)
 	}
 
+	hasCFD := false
+	for _, ib := range d.Inbounds {
+		if ib.Protocol == "cloudflared" {
+			hasCFD = true
+			break
+		}
+	}
+
 	cfg.Route = route{
-		Rules: buildRouteRules(d.Rules),
+		Rules: buildRouteRules(d.Rules, hasCFD),
 		Final: "direct",
 	}
 
@@ -708,9 +716,13 @@ func buildWireguardEndpoint(ep database.Endpoint) (endpoints, error) {
 	return ec, nil
 }
 
-func buildRouteRules(rules []database.Rule) []map[string]any {
-	result := []map[string]any{
-		{"ip_is_private": true, "outbound": "block"},
+func buildRouteRules(rules []database.Rule, hasCFD bool) []map[string]any {
+	result := []map[string]any{}
+	// 无 cloudflared 入站时保留「私网拦截」兜底；有 cloudflared 时隧道回环目标
+	// 是 localhost/私网（CF Public Hostname 的 Service 地址），私网拦截会把它掐死，
+	// 故此时不注入该规则，其余私网访问走 final=direct。
+	if !hasCFD {
+		result = append(result, map[string]any{"ip_is_private": true, "outbound": "block"})
 	}
 
 	grouped := map[int]map[string]any{}
