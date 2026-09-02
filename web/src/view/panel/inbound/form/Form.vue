@@ -260,7 +260,7 @@
         </Section>
 
         <!-- 安全 -->
-        <Section title="安全">
+        <Section title="安全" v-if="form.Protocol !== 'cloudflared'">
             <div class="form-row">
                 <span class="form-label">安全</span>
                     <RadioGroup
