@@ -52,6 +52,12 @@ func RegisterRoutes(r *gin.Engine) {
 		private.POST("/inbound/quick", QuickInbound)
 		private.PUT("/inbound/:id/toggle", ToggleInbound)
 
+		// 出站
+		private.GET("/outbound", GetOutbounds)
+		private.PUT("/outbound/save", SaveOutbound)
+		private.DELETE("/outbound/:id", DeleteOutbound)
+		private.PUT("/outbound/:id/toggle", ToggleOutbound)
+
 		// 用户
 		private.GET("/user", GetUsers)
 		private.PUT("/user/save", SaveUser)

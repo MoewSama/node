@@ -252,6 +252,34 @@ type Endpoint struct {
 
 func (Endpoint) TableName() string { return "endpoint" }
 
+type Outbound struct {
+	ID        uint `gorm:"primarykey"`
+	Enable    bool
+	Name      string // 备注名
+	Protocol  string // vless（当前仅支持 vless 中转）
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	// 连接
+	Address string // 落地地址（域名或 IP）
+	Port    int    // 落地端口
+	UUID    string // VLESS 用户 UUID
+
+	// 传输
+	Transport string // raw / websocket
+	WsPath    string // websocket 路径
+	WsHost    string // websocket Host header
+
+	// TLS
+	TLSType     string // none / tls
+	ServerName  string // SNI
+	Insecure    bool   // 跳过证书验证
+	UTLS        string // uTLS 指纹，空表示不启用
+	ALPN        string // ALPN，逗号分隔
+}
+
+func (Outbound) TableName() string { return "outbound" }
+
 type Warp struct {
 	ID          uint   `gorm:"primarykey"`
 	AccessToken string // Cloudflare 返回的 access token
