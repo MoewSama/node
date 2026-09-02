@@ -129,27 +129,6 @@ type user struct {
 type outbounds struct {
 	Type string `json:"type"`
 	Tag  string `json:"tag"`
-	// VLESS
-	Server      string      `json:"server,omitempty"`
-	ServerPort  int         `json:"server_port,omitempty"`
-	UUID        string      `json:"uuid,omitempty"`
-	Flow        string      `json:"flow,omitempty"`
-	Network     string      `json:"network,omitempty"`
-	Transport   *transport  `json:"transport,omitempty"`
-	OutboundTLS *outboundTLS `json:"tls,omitempty"`
-}
-
-type outboundTLS struct {
-	Enabled     bool     `json:"enabled"`
-	ServerName  string   `json:"server_name,omitempty"`
-	Insecure    bool     `json:"insecure,omitempty"`
-	ALPN        []string `json:"alpn,omitempty"`
-	UTLS        *utls    `json:"utls,omitempty"`
-}
-
-type utls struct {
-	Enabled     bool   `json:"enabled"`
-	Fingerprint string `json:"fingerprint"`
 }
 
 type endpoints struct {
@@ -190,7 +169,6 @@ type db struct {
 	Boards     []database.Board
 	BoardUsers map[uint][]database.BoardUser
 	Endpoints  []database.Endpoint
-	Outbounds  []database.Outbound
 	Rules      []database.Rule
 	UserNames  []string
 }
@@ -201,7 +179,6 @@ func loadDatabase() (db, error) {
 	database.DB.Where("enable = ?", true).Find(&d.Inbounds)
 	database.DB.Where("enable = ?", true).Find(&d.Users)
 	database.DB.Where("enable = ?", true).Find(&d.Endpoints)
-	database.DB.Where("enable = ?", true).Find(&d.Outbounds)
 	database.DB.Order("sort asc, `index` asc").Find(&d.Rules)
 
 	var config database.Config
@@ -301,14 +278,6 @@ func generateConfig() error {
 			Type: "block",
 			Tag:  "block",
 		},
-	}
-
-	for _, ob := range d.Outbounds {
-		oc, err := buildOutbound(ob)
-		if err != nil {
-			continue
-		}
-		cfg.Outbounds = append(cfg.Outbounds, oc)
 	}
 
 	for _, ep := range d.Endpoints {
@@ -610,62 +579,6 @@ func buildUser(protocol, name, uuid, password, flow string, ib database.Inbound)
 		u.Password = password
 	}
 	return u
-}
-
-// ── outbound builders ────────────────────────────────────────────────────────
-
-func buildOutbound(ob database.Outbound) (outbounds, error) {
-	switch ob.Protocol {
-	case "vless":
-		return buildVlessOutbound(ob)
-	}
-	return outbounds{}, fmt.Errorf("unsupported outbound protocol: %s", ob.Protocol)
-}
-
-func buildVlessOutbound(ob database.Outbound) (outbounds, error) {
-	if ob.Address == "" || ob.Port == 0 || ob.UUID == "" {
-		return outbounds{}, fmt.Errorf("vless outbound: 地址/端口/UUID 不能为空")
-	}
-
-	oc := outbounds{
-		Type:       "vless",
-		Tag:        ob.Name,
-		Server:     ob.Address,
-		ServerPort: ob.Port,
-		UUID:       ob.UUID,
-		Network:    "tcp",
-	}
-
-	switch ob.Transport {
-	case "websocket":
-		oc.Network = ""
-		t := &transport{
-			Type: "ws",
-			Path: ob.WsPath,
-		}
-		if ob.WsHost != "" {
-			t.Headers = map[string]string{"Host": ob.WsHost}
-		}
-		oc.Transport = t
-	}
-
-	switch ob.TLSType {
-	case "tls":
-		t := &outboundTLS{
-			Enabled:    true,
-			ServerName: ob.ServerName,
-			Insecure:   ob.Insecure,
-		}
-		if ob.ALPN != "" {
-			t.ALPN = strings.Split(ob.ALPN, ",")
-		}
-		if ob.UTLS != "" {
-			t.UTLS = &utls{Enabled: true, Fingerprint: ob.UTLS}
-		}
-		oc.OutboundTLS = t
-	}
-
-	return oc, nil
 }
 
 // ── endpoint builders ────────────────────────────────────────────────────────────

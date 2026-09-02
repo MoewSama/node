@@ -58,7 +58,6 @@ const links = computed(() => [
     { to: '/dashboard', icon: 'dashboard',      label: '仪表盘' },
     { divider: true },
     { to: '/inbound',   icon: 'add_link',       label: '入站' },
-    { to: '/outbound',  icon: 'swap_calls',     label: '出站' },
     { to: '/user',      icon: 'rss_feed',       label: '用户' },
     { to: '/endpoint',  icon: 'cloud_sync',     label: '端点' },
     ...(configStore.BoardEnable ? [{ to: '/board', icon: 'flight', label: '面板对接' }] : []),
