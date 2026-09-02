@@ -95,7 +95,8 @@ func CheckCoreUpdate(c *gin.Context) {
 }
 
 func UpdateCoreBin(c *gin.Context) {
-	if err := core.UpdateCoreBin(); err != nil {
+	force := c.Query("force") == "1" || c.Query("force") == "true"
+	if err := core.UpdateCoreBin(force); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

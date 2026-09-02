@@ -16,14 +16,14 @@
                 <i class="icon">refresh</i>
                 重启
             </button>
-            <button class="action-btn version" :disabled="!hasUpdate" :class="{ 'has-update': hasUpdate }" @click="openUpdate">
+            <button class="action-btn version" :class="{ 'has-update': hasUpdate }" @click="openUpdate">
                 <i class="icon">{{ hasUpdate ? 'new_releases' : 'commit' }}</i>
                 {{ hasUpdate ? '有新核心' : core.Version }}
             </button>
         </div>
     </div>
-    <Drawer v-model="showUpdate" title="发现新核心" saveText="立即更新" @save="handleUpdate">
-        <Update :current-version="currentVersion" :latest-version="latestVersion" changelog="sing-box 核心更新" />
+    <Drawer v-model="showUpdate" :title="hasUpdate ? '发现新核心' : '强制更新核心'" saveText="立即更新" @save="handleUpdate">
+        <Update :current-version="currentVersion" :latest-version="latestVersion" :changelog="hasUpdate ? 'sing-box 核心更新' : '当前已是最新版本，强制更新将重新下载并覆盖安装（相同版本号）'" />
     </Drawer>
 </template>
 
@@ -74,10 +74,14 @@ function openUpdate() {
 }
 
 async function handleUpdate() {
-    modal.value?.show('confirm', '核心更新完成后将自动重启\n确认更新？', async () => {
+    const force = !hasUpdate.value
+    const tip = force
+        ? '核心已是最新版本，强制更新将重新下载覆盖（用于重装）\n确认更新？'
+        : '核心更新完成后将自动重启\n确认更新？'
+    modal.value?.show('confirm', tip, async () => {
         modal.value?.update('warn', '更新中...')
         try {
-            await updateCoreBin()
+            await updateCoreBin(force)
             modal.value?.update('success', '更新成功，正在重启核心...')
             await handleRestart()
             await fetchUpdate()

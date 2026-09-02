@@ -70,7 +70,8 @@ func CheckCoreUpdate() (*CoreUpdateResult, error) {
 }
 
 // UpdateCoreBin 下载并更新 sing-box 核心
-func UpdateCoreBin() error {
+// force=true 时跳过版本比对，同版本也重新下载覆盖（用于重装/换构建 tag 的核心）
+func UpdateCoreBin(force bool) error {
 	// 获取最新 release
 	resp, err := http.Get(singBoxReleaseURL)
 	if err != nil {
@@ -88,14 +89,21 @@ func UpdateCoreBin() error {
 	prefix := fmt.Sprintf("sing-box-")
 	suffix := fmt.Sprintf("_linux_%s.gz", arch)
 	var downloadURL string
+	var targetVersion string
 	for _, a := range release.Assets {
 		if strings.HasPrefix(a.Name, prefix) && strings.HasSuffix(a.Name, suffix) {
 			downloadURL = a.BrowserDownloadURL
+			targetVersion = strings.TrimSuffix(strings.TrimPrefix(a.Name, prefix), suffix)
 			break
 		}
 	}
 	if downloadURL == "" {
 		return fmt.Errorf("未找到资产: %s*%s", prefix, suffix)
+	}
+
+	// 非 force 时跳过同版本重装
+	if !force && targetVersion != "" && targetVersion == Default.Version() {
+		return fmt.Errorf("核心已是最新版本 %s（如需重装请使用强制更新）", targetVersion)
 	}
 
 	// 获取 core 配置的 BinPath

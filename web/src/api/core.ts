@@ -6,7 +6,7 @@ export const updateCore = (data: any) => request('/api/core', {
     body: JSON.stringify(data),
 })
 export const checkCoreUpdate = () => request('/api/core/check-update')
-export const updateCoreBin = () => request('/api/core/update', { method: 'POST' })
+export const updateCoreBin = (force: boolean = false) => request(`/api/core/update${force ? '?force=1' : ''}`, { method: 'POST' })
 export const resetCore = () => request('/api/core/reset', { method: 'POST' })
 
 export const getCoreStatus = () => request('/api/core/status')
