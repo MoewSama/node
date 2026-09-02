@@ -36,16 +36,18 @@ CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc \
   go build -ldflags="-s -w -X main.Version=${VERSION}" \
   -o "dist/slinx_linux_arm64" .
 
+SING_BOX_TAGS='with_v2ray_api,with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_clash_api,with_cloudflared'
+
 echo "  sing-box_linux_amd64..."
 GOBIN=$(pwd)/dist GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
-  go install -tags 'with_v2ray_api,with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_clash_api' \
+  go install -tags "$SING_BOX_TAGS" \
   -ldflags="-s -w -X github.com/sagernet/sing-box/constant.Version=${SING_BOX_VERSION}" \
   github.com/sagernet/sing-box/cmd/sing-box@${SING_BOX_VERSION}
 mv dist/sing-box dist/sing-box_linux_amd64
 
 echo "  sing-box_linux_arm64..."
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 \
-  go install -tags 'with_v2ray_api,with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_clash_api' \
+  go install -tags "$SING_BOX_TAGS" \
   -ldflags="-s -w -X github.com/sagernet/sing-box/constant.Version=${SING_BOX_VERSION}" \
   github.com/sagernet/sing-box/cmd/sing-box@${SING_BOX_VERSION}
 # cross 编译产物在 GOPATH/bin/linux_arm64/sing-box
