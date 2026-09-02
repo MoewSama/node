@@ -7,6 +7,9 @@
                 :options="inboundOptions"
             />
         </div>
+        <div class="form-tip">
+            选中的入站流量将转发到出站「{{ tag }}」。
+        </div>
     </div>
 </template>
 
@@ -18,7 +21,7 @@ import { getRule, saveRule } from '@/api/route'
 
 const modal = inject<any>('modal')
 
-const props = defineProps<{ endpoint: any }>()
+const props = defineProps<{ tag: string }>()
 
 const inbounds = ref<any[]>([])
 const selected = ref<string[]>([])
@@ -27,7 +30,7 @@ const inboundOptions = computed(() =>
     inbounds.value
         .filter(ib => ib.Enable)
         .map(ib => ({
-            label: String(ib.Port),
+            label: ib.Protocol === 'cloudflared' ? `${ib.Name} (隧道)` : String(ib.Port),
             value: String(ib.Port),
         }))
 )
@@ -38,7 +41,7 @@ onMounted(async () => {
     const res = await getRule()
     const rules = res.data as { Sort: number, Key: string, Value: string }[]
 
-    const tagJSON = JSON.stringify(props.endpoint.Tag)
+    const tagJSON = JSON.stringify(props.tag)
     const outboundRow = rules.find(r => r.Key === 'outbound' && r.Value === tagJSON)
     if (outboundRow) {
         const inboundRow = rules.find(r => r.Sort === outboundRow.Sort && r.Key === 'inbound')
@@ -50,7 +53,7 @@ onMounted(async () => {
 
 async function save() {
     try {
-        await saveRule(props.endpoint.Tag, selected.value)
+        await saveRule(props.tag, selected.value)
         modal.value?.show('success', '保存成功')
     } catch (err: any) {
         modal.value?.show('error', err?.error)
@@ -64,7 +67,7 @@ defineExpose({ save })
 .route {
     padding: 20px;
     width: 100%;
-    
+
     .form-row {
         display: flex;
         align-items: center;
@@ -77,6 +80,15 @@ defineExpose({ save })
         font-size: var(--font-size-sm);
         color: var(--color-text-dark);
         text-align: right;
+    }
+
+    .form-tip {
+        margin-top: 12px;
+        padding-left: 110px;
+        font-size: var(--font-size-sm);
+        color: var(--color-text-dark);
+        opacity: 0.7;
+        line-height: 1.6;
     }
 }
 

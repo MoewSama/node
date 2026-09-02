@@ -17,6 +17,9 @@
                             <Toggle :model-value="ob.Enable" @update:model-value="toggle(ob)" />
                         </td>
                         <td class="actions">
+                            <button class="icon-btn" @click="openRoute(ob)" title="路由">
+                                <i class="icon">alt_route</i>
+                            </button>
                             <button class="icon-btn" @click="openEdit(ob)" title="编辑">
                                 <i class="icon">edit</i>
                             </button>
@@ -35,6 +38,9 @@
     <Drawer v-model="showDrawer" :title="drawerTitle" @save="handleSave">
         <Form v-model="defaultOutbound" />
     </Drawer>
+    <Drawer v-model="showRoute" title="路由设置" @save="routeRef?.save()">
+        <Route v-if="showRoute" ref="routeRef" :tag="routeTag" />
+    </Drawer>
 </template>
 
 <script setup lang="ts">
@@ -42,6 +48,7 @@ import Toggle from '@/component/ui/Toggle.vue'
 import Drawer from '@/component/Drawer.vue'
 import List from '@/component/ui/List.vue'
 import Form from '@/view/panel/outbound/form/Form.vue'
+import Route from '@/view/panel/endpoint/widget/Route.vue'
 import { getOutbounds, saveOutbound, deleteOutbound, toggleOutbound } from '@/api/outbound'
 
 const modal = inject<any>('modal')
@@ -102,6 +109,15 @@ function openEdit(ob: any) {
     }
     drawerTitle.value = '编辑出站'
     showDrawer.value = true
+}
+
+const showRoute = ref(false)
+const routeTag = ref('')
+const routeRef = ref<any>(null)
+
+function openRoute(ob: any) {
+    routeTag.value = ob.Name
+    showRoute.value = true
 }
 
 async function handleSave() {

@@ -51,8 +51,8 @@
 
 
 
-    <Drawer v-model="showRoute" title="路由设置" @save="routeRef?.save()">
-        <Route v-if="showRoute" ref="routeRef" :endpoint="routeEndpoint" />
+        <Drawer v-model="showRoute" title="路由设置" @save="routeRef?.save()">
+        <Route v-if="showRoute" ref="routeRef" :tag="routeTag" />
     </Drawer>
 </template>
 
@@ -157,11 +157,11 @@ async function save() {
 import Route from '@/view/panel/endpoint/widget/Route.vue'
 
 const showRoute = ref(false)
-const routeEndpoint = ref<any>(null)
+const routeTag = ref('')
 const routeRef = ref<any>(null)
 
 function openRoute(ep: any) {
-    routeEndpoint.value = ep
+    routeTag.value = ep.Tag
     showRoute.value = true
 }
 </script>
