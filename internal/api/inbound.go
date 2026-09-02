@@ -3,8 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/slinxlink/node/internal/core"
@@ -38,6 +40,18 @@ func SaveInbound(c *gin.Context) {
 		if ib.CfToken == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "请填写 Cloudflare Tunnel Token"})
 			return
+		}
+		if ib.CfOrigin != "" {
+			// Origin 域名格式校验（去掉可能的端口/协议残留，只留主机名）
+			host := strings.TrimPrefix(strings.TrimPrefix(ib.CfOrigin, "https://"), "http://")
+			if h, _, err := net.SplitHostPort(host); err == nil {
+				host = h
+			}
+			if !util.ValidateDomain(host) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Origin 需为有效域名（CF Public Hostname 的子域）"})
+				return
+			}
+			ib.CfOrigin = host
 		}
 		if ib.CfProtocol != "" && ib.CfProtocol != "quic" && ib.CfProtocol != "http2" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "protocol 仅支持 quic / http2"})

@@ -12,6 +12,15 @@ import (
 
 // ── 订阅入口 ─────────────────────────────────────────────────────────
 
+// cfdOrigin 返回当前启用中的 cloudflared 入站的 Origin 域名（未配置则空）。
+func cfdOrigin() string {
+	var cfd database.Inbound
+	if database.DB.Where("protocol = ? AND enable = ? AND cf_origin != ''", "cloudflared", true).First(&cfd).Error != nil {
+		return ""
+	}
+	return cfd.CfOrigin
+}
+
 func Sub(token string) string {
 	user, inbounds := getUser(token)
 	if user == nil {
@@ -19,11 +28,18 @@ func Sub(token string) string {
 	}
 
 	host := getHost()
+	origin := cfdOrigin()
 	var uris []string
 	for _, inbound := range inbounds {
 		uri := dispatch(*user, inbound, host)
 		if uri != "" {
 			uris = append(uris, uri)
+		}
+		// vless-ws 入站 + 已配置隧道 Origin：追加一条走 CF 隧道的节点（域名+TLS）
+		if origin != "" && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
+			if uri := vlessCF(*user, inbound, origin); uri != "" {
+				uris = append(uris, uri)
+			}
 		}
 	}
 	return strings.Join(uris, "\n")
@@ -36,11 +52,17 @@ func Clash(token string) (string, string) {
 	}
 
 	host := getHost()
+	origin := cfdOrigin()
 	var proxies []string
 	for _, inbound := range inbounds {
 		proxy := dispatchClash(*user, inbound, host)
 		if proxy != "" {
 			proxies = append(proxies, proxy)
+		}
+		if origin != "" && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
+			if proxy := vlessClashCF(*user, inbound, origin); proxy != "" {
+				proxies = append(proxies, proxy)
+			}
 		}
 	}
 
@@ -100,6 +122,7 @@ func Info(token string) *Data {
 	database.DB.Where("id IN ? AND enable = ?", ids, true).Find(&inbounds)
 
 	host := getHost()
+	origin := cfdOrigin()
 	var uris []string
 	var jsons []string
 	for _, inbound := range inbounds {
@@ -108,6 +131,9 @@ func Info(token string) *Data {
 			uris = append(uris, uri)
 		}
 		jsons = append(jsons, Json(user, inbound, "singbox"))
+		if origin != "" && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
+			jsons = append(jsons, vlessSingBoxCF(user, inbound, origin))
+		}
 	}
 
 	return &Data{

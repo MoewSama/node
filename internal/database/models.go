@@ -113,6 +113,7 @@ type Inbound struct {
 
 	// Cloudflared（Cloudflare Tunnel 入站）
 	CfToken          string `gorm:"type:text"` // 隧道 Token（Cloudflare Zero Trust → Networks → Tunnels → Install connector）
+	CfOrigin         string // 回环目标域名，如 tunnel.example.com；CF 后台 Public Hostname 的 Service 应填 http://127.0.0.1:<vless端口>
 	CfHAConnections  int    // 到 edge 的 HA 连接数，0 表示默认
 	CfProtocol       string // quic / http2，空表示默认
 	CfPostQuantum    bool   // 控制连接启用后量子密钥交换

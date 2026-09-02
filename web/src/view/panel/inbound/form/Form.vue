@@ -34,6 +34,15 @@
                 <span class="form-label">Token</span>
                 <Text v-model="form.CfToken" placeholder="Cloudflare Zero Trust → Networks → Tunnels → Install connector 中的令牌" />
             </div>
+            <div class="form-row">
+                <span class="form-label">Origin 域名</span>
+                <Input v-model="form.CfOrigin" placeholder="如 tunnel.example.com（Public Hostname 子域）" />
+            </div>
+            <div class="form-tip">
+                填写后：① 本机 vless-ws 入站订阅自动追加走隧道的节点（域名+TLS，端口 443）；
+                ② CF 后台 Public Hostname 的 Service 请填 <b>http://127.0.0.1:&lt;vless端口&gt;</b>（不要用 localhost，本地无 DNS）。
+                仅用于客户端接入，不影响服务端隧道本身。
+            </div>
             <div class="form-row half">
                 <span class="form-label">传输协议</span>
                 <Select v-model="form.CfProtocol" :options="[

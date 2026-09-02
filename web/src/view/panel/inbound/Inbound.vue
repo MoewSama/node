@@ -73,6 +73,7 @@ const baseInbound = () => ({
     WsPingInterval: 0,
 
     CfToken: '',
+    CfOrigin: '',
     CfHAConnections: 0,
     CfProtocol: '',
     CfPostQuantum: false,
