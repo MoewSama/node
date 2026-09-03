@@ -77,14 +77,16 @@ onMounted(async () => {
         getUrl(props.user.Token),
         Promise.all(inboundTags.value.map(ib => getJson({ user: props.user, inbound: ib.inbound, format: 'singbox' }))),
     ])
-    
-    uris.value = inboundTags.value.map((ib, i) => ({
-        label: ib.protocol.toUpperCase(),
-        color: ib.color,
-        name: ib.name,
-        value: uriResults[i].uri,
-        download: jsonResults[i].json || undefined,
-    }))
+
+    uris.value = inboundTags.value
+        .map((ib, i) => ({
+            label: ib.protocol.toUpperCase(),
+            color: ib.color,
+            name: ib.name,
+            value: uriResults[i].uri,
+            download: jsonResults[i].json || undefined,
+        }))
+        .filter(uri => uri.value)
 
     urls.value = urlResult.urls.map((url: string, i: number) => {
         const labels = ['SUB', 'CLASH', 'SURGE']

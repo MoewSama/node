@@ -72,6 +72,10 @@ func GetSubscriptionUri(c *gin.Context) {
 		Inbound database.Inbound `json:"inbound"`
 	}
 	c.ShouldBindJSON(&req)
+	if req.Inbound.HideInSub {
+		c.JSON(http.StatusOK, gin.H{"uri": ""})
+		return
+	}
 	result := sub.Uri(req.User, req.Inbound)
 	c.JSON(http.StatusOK, gin.H{"uri": result})
 }
@@ -92,6 +96,10 @@ func GetSubscriptionJson(c *gin.Context) {
 		Format  string           `json:"format"` // singbox / xray
 	}
 	c.ShouldBindJSON(&req)
+	if req.Inbound.HideInSub {
+		c.JSON(http.StatusOK, gin.H{"json": ""})
+		return
+	}
 	result := sub.Json(req.User, req.Inbound, req.Format)
 	c.JSON(http.StatusOK, gin.H{"json": result})
 }

@@ -66,18 +66,20 @@ const inboundTags = computed(() => {
     }
 })
 
-const uris = computed(() => 
-    (props.data.uris ?? []).map((uri: string, i: number) => {
-        const proto = (uri.split('://')[0] ?? '').replace('2', '')
-        const name = decodeURIComponent(uri.split('#')[1] ?? '')
-        return {
-            label: proto.toUpperCase(),
-            color: protocol(proto),
-            name,
-            value: uri,
-            download: props.data.jsons?.[i],
-        }
-    })
+const uris = computed(() =>
+    (props.data.uris ?? [])
+        .map((uri: string, i: number) => {
+            const proto = (uri.split('://')[0] ?? '').replace('2', '')
+            const name = decodeURIComponent(uri.split('#')[1] ?? '')
+            return {
+                label: proto.toUpperCase(),
+                color: protocol(proto),
+                name,
+                value: uri,
+                download: props.data.jsons?.[i],
+            }
+        })
+        .filter(uri => uri.value)
 )
 
 const urls = computed(() =>
