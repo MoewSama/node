@@ -143,9 +143,11 @@ func vlessCF(u database.User, inbound database.Inbound, origin string) string {
 	// 复用 vless URI 生成，把地址换成隧道域名、端口 443、强制 TLS（CF 边缘终结）
 	host := origin
 	saved := inbound
+	saved.Port = 443
 	saved.TLSType = "tls"
 	saved.ServerName = origin
 	saved.Insecure = false
+	saved.Name = inbound.Name + " (CF)"
 	return vless(u.UUID, host, saved)
 }
 
