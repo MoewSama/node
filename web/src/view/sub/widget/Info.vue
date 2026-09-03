@@ -79,7 +79,7 @@ const uris = computed(() =>
                 download: props.data.jsons?.[i],
             }
         })
-        .filter(uri => uri.value)
+        .filter((uri: { value: string }) => uri.value)
 )
 
 const urls = computed(() =>
