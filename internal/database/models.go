@@ -115,6 +115,7 @@ type Inbound struct {
 	// Cloudflared（Cloudflare Tunnel 入站）
 	CfToken          string `gorm:"type:text"` // 隧道 Token（Cloudflare Zero Trust → Networks → Tunnels → Install connector）
 	CfOrigin         string // 回环目标域名，如 tunnel.example.com；CF 后台 Public Hostname 的 Service 应填 http://127.0.0.1:<vless端口>
+	CfPreferred      string // 优选连接域名（为空则用 Origin）；CF 节点地址用它，SNI 始终为 Origin
 	CfBindPort       int    // 绑定的本机 vless-ws 入站端口；订阅仅对该入站追加 CF 隧道节点，0 表示不绑定
 	CfHAConnections  int    // 到 edge 的 HA 连接数，0 表示默认
 	CfProtocol       string // quic / http2，空表示默认

@@ -139,23 +139,22 @@ func vlessClash(uuid string, host string, inbound database.Inbound) string {
 	return sb.String()
 }
 
-func vlessCF(u database.User, inbound database.Inbound, origin string) string {
-	// 复用 vless URI 生成，把地址换成隧道域名、端口 443、强制 TLS（CF 边缘终结）
-	host := origin
+func vlessCF(u database.User, inbound database.Inbound, origin, server string) string {
+	// server=客户端连接地址（优选域名或 Origin），端口 443，SNI 始终为 Origin（CF 边缘终结）
 	saved := inbound
 	saved.Port = 443
 	saved.TLSType = "tls"
 	saved.ServerName = origin
 	saved.Insecure = false
 	saved.Name = inbound.Name + " (CF)"
-	return vless(u.UUID, host, saved)
+	return vless(u.UUID, server, saved)
 }
 
-func vlessClashCF(u database.User, inbound database.Inbound, origin string) string {
+func vlessClashCF(u database.User, inbound database.Inbound, origin, server string) string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "  - name: %s (CF)\n", inbound.Name)
 	fmt.Fprintf(&sb, "    type: vless\n")
-	fmt.Fprintf(&sb, "    server: %s\n", origin)
+	fmt.Fprintf(&sb, "    server: %s\n", server)
 	fmt.Fprintf(&sb, "    port: 443\n")
 	fmt.Fprintf(&sb, "    uuid: %s\n", u.UUID)
 	fmt.Fprintf(&sb, "    network: ws\n")
@@ -172,11 +171,11 @@ func vlessClashCF(u database.User, inbound database.Inbound, origin string) stri
 	return sb.String()
 }
 
-func vlessSingBoxCF(u database.User, inbound database.Inbound, origin string) string {
+func vlessSingBoxCF(u database.User, inbound database.Inbound, origin, server string) string {
 	out := map[string]any{
 		"type":        "vless",
 		"tag":         "proxy-cf",
-		"server":      origin,
+		"server":      server,
 		"server_port": 443,
 		"uuid":        u.UUID,
 		"tls": map[string]any{

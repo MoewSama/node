@@ -12,14 +12,15 @@ import (
 
 // ── 订阅入口 ─────────────────────────────────────────────────────────
 
-// cfdBinding 返回当前启用中的 cloudflared 入站的 Origin 域名与绑定的 vless 入站端口。
+// cfdBinding 返回当前启用中的 cloudflared 入站的 Origin 域名、绑定的 vless 入站端口与优选连接域名。
 // 未配置 Origin 或绑定端口时 origin/bindPort 均为零值，订阅不生成 CF 节点。
-func cfdBinding() (origin string, bindPort int) {
+// preferred 为空时调用方用 Origin 直连；SNI 始终为 Origin。
+func cfdBinding() (origin string, bindPort int, preferred string) {
 	var cfd database.Inbound
 	if database.DB.Where("protocol = ? AND enable = ? AND cf_origin != '' AND cf_bind_port > 0", "cloudflared", true).First(&cfd).Error != nil {
-		return "", 0
+		return "", 0, ""
 	}
-	return cfd.CfOrigin, cfd.CfBindPort
+	return cfd.CfOrigin, cfd.CfBindPort, cfd.CfPreferred
 }
 
 func Sub(token string) string {
@@ -29,7 +30,7 @@ func Sub(token string) string {
 	}
 
 	host := getHost()
-	origin, bindPort := cfdBinding()
+	origin, bindPort, preferred := cfdBinding()
 	var uris []string
 	for _, inbound := range inbounds {
 		if !inbound.HideInSub {
@@ -40,7 +41,7 @@ func Sub(token string) string {
 		}
 		// CF 隧道节点不受 HideInSub 影响：绑定的隐藏入站只藏明文直连，CF 节点照常下发
 		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
-			if uri := vlessCF(*user, inbound, origin); uri != "" {
+			if uri := vlessCF(*user, inbound, origin, cfServer(origin, preferred)); uri != "" {
 				uris = append(uris, uri)
 			}
 		}
@@ -55,7 +56,7 @@ func Clash(token string) (string, string) {
 	}
 
 	host := getHost()
-	origin, bindPort := cfdBinding()
+	origin, bindPort, preferred := cfdBinding()
 	var proxies []string
 	for _, inbound := range inbounds {
 		if !inbound.HideInSub {
@@ -65,7 +66,7 @@ func Clash(token string) (string, string) {
 			}
 		}
 		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
-			if proxy := vlessClashCF(*user, inbound, origin); proxy != "" {
+			if proxy := vlessClashCF(*user, inbound, origin, cfServer(origin, preferred)); proxy != "" {
 				proxies = append(proxies, proxy)
 			}
 		}
@@ -130,7 +131,7 @@ func Info(token string) *Data {
 	database.DB.Where("id IN ? AND enable = ?", ids, true).Find(&inbounds)
 
 	host := getHost()
-	origin, bindPort := cfdBinding()
+	origin, bindPort, preferred := cfdBinding()
 	var uris []string
 	var jsons []string
 	for _, inbound := range inbounds {
@@ -142,10 +143,10 @@ func Info(token string) *Data {
 			jsons = append(jsons, Json(user, inbound, "singbox"))
 		}
 		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
-			if uri := vlessCF(user, inbound, origin); uri != "" {
+			if uri := vlessCF(user, inbound, origin, cfServer(origin, preferred)); uri != "" {
 				uris = append(uris, uri)
 			}
-			jsons = append(jsons, vlessSingBoxCF(user, inbound, origin))
+			jsons = append(jsons, vlessSingBoxCF(user, inbound, origin, cfServer(origin, preferred)))
 		}
 	}
 
@@ -201,23 +202,31 @@ func Json(user database.User, inbound database.Inbound, format string) string {
 	}
 }
 
+// cfServer 返回 CF 节点的客户端连接地址：优选域名优先，为空则回落 Origin。
+func cfServer(origin, preferred string) string {
+	if preferred != "" {
+		return preferred
+	}
+	return origin
+}
+
 // ── CF 隧道单节点 ────────────────────────────────────────────────────
 // 若该入站被 cloudflared 绑定，返回其 CF 隧道节点，否则返回空字符串。
 // 不受 HideInSub 影响：绑定的隐藏入站只藏明文直连，CF 节点照常可取。
 func CfUri(user database.User, inbound database.Inbound) string {
-	origin, bindPort := cfdBinding()
+	origin, bindPort, preferred := cfdBinding()
 	if origin == "" || bindPort != inbound.Port || inbound.Protocol != "vless" || inbound.Transport != "websocket" {
 		return ""
 	}
-	return vlessCF(user, inbound, origin)
+	return vlessCF(user, inbound, origin, cfServer(origin, preferred))
 }
 
 func CfJson(user database.User, inbound database.Inbound) string {
-	origin, bindPort := cfdBinding()
+	origin, bindPort, preferred := cfdBinding()
 	if origin == "" || bindPort != inbound.Port || inbound.Protocol != "vless" || inbound.Transport != "websocket" {
 		return ""
 	}
-	return vlessSingBoxCF(user, inbound, origin)
+	return vlessSingBoxCF(user, inbound, origin, cfServer(origin, preferred))
 }
 
 // ── 协议分发 ─────────────────────────────────────────────────────────
