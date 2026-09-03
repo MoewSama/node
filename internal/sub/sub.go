@@ -32,14 +32,13 @@ func Sub(token string) string {
 	origin, bindPort := cfdBinding()
 	var uris []string
 	for _, inbound := range inbounds {
-		if inbound.HideInSub {
-			continue
+		if !inbound.HideInSub {
+			uri := dispatch(*user, inbound, host)
+			if uri != "" {
+				uris = append(uris, uri)
+			}
 		}
-		uri := dispatch(*user, inbound, host)
-		if uri != "" {
-			uris = append(uris, uri)
-		}
-		// 仅绑定的 vless-ws 入站：追加一条走 CF 隧道的节点（域名+TLS）
+		// CF 隧道节点不受 HideInSub 影响：绑定的隐藏入站只藏明文直连，CF 节点照常下发
 		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
 			if uri := vlessCF(*user, inbound, origin); uri != "" {
 				uris = append(uris, uri)
@@ -59,12 +58,11 @@ func Clash(token string) (string, string) {
 	origin, bindPort := cfdBinding()
 	var proxies []string
 	for _, inbound := range inbounds {
-		if inbound.HideInSub {
-			continue
-		}
-		proxy := dispatchClash(*user, inbound, host)
-		if proxy != "" {
-			proxies = append(proxies, proxy)
+		if !inbound.HideInSub {
+			proxy := dispatchClash(*user, inbound, host)
+			if proxy != "" {
+				proxies = append(proxies, proxy)
+			}
 		}
 		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
 			if proxy := vlessClashCF(*user, inbound, origin); proxy != "" {
@@ -136,15 +134,17 @@ func Info(token string) *Data {
 	var uris []string
 	var jsons []string
 	for _, inbound := range inbounds {
-		if inbound.HideInSub {
-			continue
+		if !inbound.HideInSub {
+			uri := dispatch(user, inbound, host)
+			if uri != "" {
+				uris = append(uris, uri)
+			}
+			jsons = append(jsons, Json(user, inbound, "singbox"))
 		}
-		uri := dispatch(user, inbound, host)
-		if uri != "" {
-			uris = append(uris, uri)
-		}
-		jsons = append(jsons, Json(user, inbound, "singbox"))
 		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
+			if uri := vlessCF(user, inbound, origin); uri != "" {
+				uris = append(uris, uri)
+			}
 			jsons = append(jsons, vlessSingBoxCF(user, inbound, origin))
 		}
 	}
