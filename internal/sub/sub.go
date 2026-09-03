@@ -12,13 +12,14 @@ import (
 
 // ── 订阅入口 ─────────────────────────────────────────────────────────
 
-// cfdOrigin 返回当前启用中的 cloudflared 入站的 Origin 域名（未配置则空）。
-func cfdOrigin() string {
+// cfdBinding 返回当前启用中的 cloudflared 入站的 Origin 域名与绑定的 vless 入站端口。
+// 未配置 Origin 或绑定端口时 origin/bindPort 均为零值，订阅不生成 CF 节点。
+func cfdBinding() (origin string, bindPort int) {
 	var cfd database.Inbound
-	if database.DB.Where("protocol = ? AND enable = ? AND cf_origin != ''", "cloudflared", true).First(&cfd).Error != nil {
-		return ""
+	if database.DB.Where("protocol = ? AND enable = ? AND cf_origin != '' AND cf_bind_port > 0", "cloudflared", true).First(&cfd).Error != nil {
+		return "", 0
 	}
-	return cfd.CfOrigin
+	return cfd.CfOrigin, cfd.CfBindPort
 }
 
 func Sub(token string) string {
@@ -28,15 +29,15 @@ func Sub(token string) string {
 	}
 
 	host := getHost()
-	origin := cfdOrigin()
+	origin, bindPort := cfdBinding()
 	var uris []string
 	for _, inbound := range inbounds {
 		uri := dispatch(*user, inbound, host)
 		if uri != "" {
 			uris = append(uris, uri)
 		}
-		// vless-ws 入站 + 已配置隧道 Origin：追加一条走 CF 隧道的节点（域名+TLS）
-		if origin != "" && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
+		// 仅绑定的 vless-ws 入站：追加一条走 CF 隧道的节点（域名+TLS）
+		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
 			if uri := vlessCF(*user, inbound, origin); uri != "" {
 				uris = append(uris, uri)
 			}
@@ -52,14 +53,14 @@ func Clash(token string) (string, string) {
 	}
 
 	host := getHost()
-	origin := cfdOrigin()
+	origin, bindPort := cfdBinding()
 	var proxies []string
 	for _, inbound := range inbounds {
 		proxy := dispatchClash(*user, inbound, host)
 		if proxy != "" {
 			proxies = append(proxies, proxy)
 		}
-		if origin != "" && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
+		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
 			if proxy := vlessClashCF(*user, inbound, origin); proxy != "" {
 				proxies = append(proxies, proxy)
 			}
@@ -122,7 +123,7 @@ func Info(token string) *Data {
 	database.DB.Where("id IN ? AND enable = ?", ids, true).Find(&inbounds)
 
 	host := getHost()
-	origin := cfdOrigin()
+	origin, bindPort := cfdBinding()
 	var uris []string
 	var jsons []string
 	for _, inbound := range inbounds {
@@ -131,7 +132,7 @@ func Info(token string) *Data {
 			uris = append(uris, uri)
 		}
 		jsons = append(jsons, Json(user, inbound, "singbox"))
-		if origin != "" && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
+		if origin != "" && bindPort == inbound.Port && inbound.Protocol == "vless" && inbound.Transport == "websocket" {
 			jsons = append(jsons, vlessSingBoxCF(user, inbound, origin))
 		}
 	}

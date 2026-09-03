@@ -38,9 +38,13 @@
                 <span class="form-label">Origin 域名</span>
                 <Input v-model="form.CfOrigin" placeholder="如 tunnel.example.com（Public Hostname 子域）" />
             </div>
+            <div class="form-row">
+                <span class="form-label">绑定入站</span>
+                <Select v-model="form.CfBindPort" :options="cfdBindOptions" placeholder="选择走隧道的 vless-ws 入站" />
+            </div>
             <div class="form-tip">
-                填写后：① 本机 vless-ws 入站订阅自动追加走隧道的节点（域名+TLS，端口 443）；
-                ② CF 后台 Public Hostname 的 Service 请填 <b>http://127.0.0.1:&lt;vless端口&gt;</b>（不要用 localhost，本地无 DNS）。
+                填写后：① 绑定的 vless-ws 入站订阅自动追加走隧道的节点（域名+TLS，端口 443）；
+                ② CF 后台 Public Hostname 的 Service 请填 <b>http://127.0.0.1:&lt;绑定端口&gt;</b>（不要用 localhost，本地无 DNS）。
                 仅用于客户端接入，不影响服务端隧道本身。
             </div>
             <div class="form-row half">
@@ -433,6 +437,7 @@ import MultiSelect from '@/component/ui/MultiSelect.vue'
 import RefreshBtn from '@/component/ui/RefreshBtn.vue'
 import { generatePassword, generateRealityTarget, generateRealityKeyPair, generateShortIDs, generateECHKeyPair } from '@/api/generate'
 import { getCert } from '@/api/cert'
+import { getInbounds } from '@/api/inbound'
 
 const form = defineModel<any>({ default: () => ({
     Enable: true,
@@ -463,10 +468,24 @@ const utlsOptions = [
 
 const certOptions = ref<any[]>([])
 const shortIDOptions = ref<any[]>([])
+const cfdBindOptions = ref<any[]>([])
+
+const cfdBindOptionsAll = [
+    { label: '不绑定', value: 0 },
+]
 
 onMounted(async () => {
     const certs = await getCert()
     certOptions.value = certs.map((c: any) => ({ label: c.Domain, value: c.ID }))
+
+    // cloudflared 绑定入站选项：所有启用的 vless-ws 入站
+    const inbounds = await getInbounds()
+    cfdBindOptions.value = [
+        ...cfdBindOptionsAll,
+        ...inbounds
+            .filter((ib: any) => ib.Enable && ib.Protocol === 'vless' && ib.Transport === 'websocket')
+            .map((ib: any) => ({ label: `${ib.Name || '未命名'} (${ib.Port})`, value: ib.Port })),
+    ]
 })
 
 watch(() => form.value.Protocol, (val) => {

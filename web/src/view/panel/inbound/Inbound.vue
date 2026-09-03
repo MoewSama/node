@@ -74,6 +74,7 @@ const baseInbound = () => ({
 
     CfToken: '',
     CfOrigin: '',
+    CfBindPort: 0,
     CfHAConnections: 0,
     CfProtocol: '',
     CfPostQuantum: false,
