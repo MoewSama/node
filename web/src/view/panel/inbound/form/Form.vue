@@ -7,6 +7,10 @@
                 <Toggle v-model="form.Enable" />
             </div>
             <div class="form-row">
+                <span class="form-label">生成到订阅</span>
+                <Toggle :model-value="!form.HideInSub" @update:model-value="(v: boolean) => form.HideInSub = !v" />
+            </div>
+            <div class="form-row">
                 <span class="form-label">备注</span>
                 <Input v-model="form.Name" />
             </div>

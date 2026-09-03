@@ -102,6 +102,7 @@ type Inbound struct {
 	Name      string // 备注名
 	Protocol  string // vless / vmess / hysteria / trojan / tuic
 	Port      int    // 监听端口
+	HideInSub bool   // 不生成到订阅列表（服务端照常运行，仅供回环/内部使用）
 	CreatedAt time.Time
 	UpdatedAt time.Time
 

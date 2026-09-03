@@ -32,6 +32,9 @@ func Sub(token string) string {
 	origin, bindPort := cfdBinding()
 	var uris []string
 	for _, inbound := range inbounds {
+		if inbound.HideInSub {
+			continue
+		}
 		uri := dispatch(*user, inbound, host)
 		if uri != "" {
 			uris = append(uris, uri)
@@ -56,6 +59,9 @@ func Clash(token string) (string, string) {
 	origin, bindPort := cfdBinding()
 	var proxies []string
 	for _, inbound := range inbounds {
+		if inbound.HideInSub {
+			continue
+		}
 		proxy := dispatchClash(*user, inbound, host)
 		if proxy != "" {
 			proxies = append(proxies, proxy)
@@ -84,6 +90,9 @@ func Surge(token string) (string, string) {
 	var proxies []string
 	var names []string
 	for _, inbound := range inbounds {
+		if inbound.HideInSub {
+			continue
+		}
 		proxy := dispatchSurge(*user, inbound, host)
 		if proxy != "" {
 			proxies = append(proxies, proxy)
@@ -127,6 +136,9 @@ func Info(token string) *Data {
 	var uris []string
 	var jsons []string
 	for _, inbound := range inbounds {
+		if inbound.HideInSub {
+			continue
+		}
 		uri := dispatch(user, inbound, host)
 		if uri != "" {
 			uris = append(uris, uri)

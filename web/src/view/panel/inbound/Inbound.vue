@@ -19,6 +19,7 @@
                                     {{ ib.Protocol === 'cloudflared' ? 'Tunnel' : (ib.Protocol === 'hysteria' || ib.Protocol === 'tuic' ? 'UDP' : (ib.Transport === 'websocket' ? 'WS' : 'TCP')) }}
                                 </span>
                                 <span v-if="ib.Protocol !== 'cloudflared' && ib.TLSType !== 'none'" class="tag blue">{{ formatTLS(ib.TLSType) }}</span>
+                                <span v-if="ib.HideInSub" class="tag">不进订阅</span>
                             </div>
                         </td>
                         <td>
@@ -66,6 +67,7 @@ const baseInbound = () => ({
     Name: '',
     Protocol: 'vless',
     Port: 0,
+    HideInSub: false,
 
     Transport: 'raw',
     WsPath: '/',
