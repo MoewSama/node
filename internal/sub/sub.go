@@ -201,6 +201,25 @@ func Json(user database.User, inbound database.Inbound, format string) string {
 	}
 }
 
+// ── CF 隧道单节点 ────────────────────────────────────────────────────
+// 若该入站被 cloudflared 绑定，返回其 CF 隧道节点，否则返回空字符串。
+// 不受 HideInSub 影响：绑定的隐藏入站只藏明文直连，CF 节点照常可取。
+func CfUri(user database.User, inbound database.Inbound) string {
+	origin, bindPort := cfdBinding()
+	if origin == "" || bindPort != inbound.Port || inbound.Protocol != "vless" || inbound.Transport != "websocket" {
+		return ""
+	}
+	return vlessCF(user, inbound, origin)
+}
+
+func CfJson(user database.User, inbound database.Inbound) string {
+	origin, bindPort := cfdBinding()
+	if origin == "" || bindPort != inbound.Port || inbound.Protocol != "vless" || inbound.Transport != "websocket" {
+		return ""
+	}
+	return vlessSingBoxCF(user, inbound, origin)
+}
+
 // ── 协议分发 ─────────────────────────────────────────────────────────
 
 func dispatch(user database.User, inbound database.Inbound, host string) string {

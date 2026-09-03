@@ -48,7 +48,7 @@ import FormRow from '@/component/ui/FormRow.vue'
 import Copy from '@/component/widget/Copy.vue'
 import Link from '@/component/widget/Link.vue'
 import { formatTime } from '@/util/format'
-import { getUri, getUrl, getJson } from '@/api/sub'
+import { getUri, getUriCf, getUrl, getJson } from '@/api/sub'
 import { protocol } from '@/util/tag'
 
 const props = defineProps<{
@@ -72,13 +72,14 @@ const uris = ref<{ label: string, color: string, name: string, value: string, do
 const urls = ref<{ label: string, color: string, name: string, value: string }[]>([])
 
 onMounted(async () => {
-    const [uriResults, urlResult, jsonResults] = await Promise.all([
+    const [uriResults, urlResult, jsonResults, cfResults] = await Promise.all([
         Promise.all(inboundTags.value.map(ib => getUri({ user: props.user, inbound: ib.inbound }))),
         getUrl(props.user.Token),
         Promise.all(inboundTags.value.map(ib => getJson({ user: props.user, inbound: ib.inbound, format: 'singbox' }))),
+        Promise.all(inboundTags.value.map(ib => getUriCf({ user: props.user, inbound: ib.inbound }))),
     ])
 
-    uris.value = inboundTags.value
+    const rows = inboundTags.value
         .map((ib, i) => ({
             label: ib.protocol.toUpperCase(),
             color: ib.color,
@@ -87,6 +88,21 @@ onMounted(async () => {
             download: jsonResults[i].json || undefined,
         }))
         .filter(uri => uri.value)
+
+    // 被 CFD 绑定的入站：追加一条 CF 隧道节点（含 sing-box JSON 下载）
+    cfResults.forEach((cf: any, i: number) => {
+        const ib = inboundTags.value[i]
+        if (cf?.uri && ib) {
+            rows.push({
+                label: ib.protocol.toUpperCase(),
+                color: ib.color,
+                name: `${ib.name} (CF)`,
+                value: cf.uri,
+                download: cf.json || undefined,
+            })
+        }
+    })
+    uris.value = rows
 
     urls.value = urlResult.urls.map((url: string, i: number) => {
         const labels = ['SUB', 'CLASH', 'SURGE']

@@ -5,6 +5,11 @@ export const getUri = (data: { user: any, inbound: any }) => request('/api/sub/u
     body: JSON.stringify(data)
 })
 
+export const getUriCf = (data: { user: any, inbound: any }) => request('/api/sub/uri-cf', {
+    method: 'POST',
+    body: JSON.stringify(data)
+})
+
 export const getUrl = (token: string) => request('/api/sub/url', {
     method: 'POST',
     body: JSON.stringify({ token })

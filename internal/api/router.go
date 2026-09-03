@@ -82,6 +82,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 		// 订阅
 		private.POST("/sub/uri", GetSubscriptionUri)
+		private.POST("/sub/uri-cf", GetSubscriptionUriCf)
 		private.POST("/sub/url", GetSubscriptionUrl)
 		private.POST("/sub/json", GetSubscriptionJson)
 

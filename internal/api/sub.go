@@ -80,6 +80,18 @@ func GetSubscriptionUri(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"uri": result})
 }
 
+func GetSubscriptionUriCf(c *gin.Context) {
+	var req struct {
+		User    database.User    `json:"user"`
+		Inbound database.Inbound `json:"inbound"`
+	}
+	c.ShouldBindJSON(&req)
+	c.JSON(http.StatusOK, gin.H{
+		"uri":  sub.CfUri(req.User, req.Inbound),
+		"json": sub.CfJson(req.User, req.Inbound),
+	})
+}
+
 func GetSubscriptionUrl(c *gin.Context) {
 	var req struct {
 		Token string `json:"token"`
