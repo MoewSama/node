@@ -3,11 +3,13 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/slinxlink/node/internal/database"
+	"github.com/slinxlink/node/internal/util"
 )
 
 // ── sing-box config structs ──────────────────────────────────────────────────
@@ -263,6 +265,7 @@ func generateConfig() error {
 		users := buildUsers(ib.Protocol, ibUsers, boardUsers, ib.Flow, ib)
 		ic, err := buildInbound(ib, users)
 		if err != nil {
+			util.Warn("[core] 入站 %s:%d 构建失败，已跳过: %v", ib.Protocol, ib.Port, err)
 			continue
 		}
 
@@ -440,29 +443,51 @@ func buildTransport(ib database.Inbound) *transport {
 	}
 }
 
+// buildMasquerade 生成 hysteria2 的伪装配置。
+// 注意：sing-box 的对象形式要求必须带 "type"（file / proxy / string），
+// 缺少 type 会被核心判为 unknown masquerade type 直接拒绝启动，
+// 因此这里对空值与非法值做兜底，宁可退化为默认 404，也不写入会让核心起不来的配置。
 func buildMasquerade(ib database.Inbound) interface{} {
 	if !ib.MasqueradeEnabled {
 		return nil
 	}
-	switch ib.MasqueradeType {
+	switch strings.TrimSpace(ib.MasqueradeType) {
 	case "proxy":
+		rawURL := strings.TrimSpace(ib.MasqueradeURL)
+		u, err := url.Parse(rawURL)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			util.Warn("[core] hysteria2 入站 %d: 伪装反向代理地址无效 (%q)，已回退为 404", ib.Port, rawURL)
+			return nil
+		}
 		return map[string]interface{}{
 			"type":         "proxy",
-			"url":          ib.MasqueradeURL,
+			"url":          rawURL,
 			"rewrite_host": ib.RewriteHost,
 		}
 	case "file":
+		directory := strings.TrimSpace(ib.MasqueradePath)
+		if directory == "" {
+			util.Warn("[core] hysteria2 入站 %d: 伪装静态文件目录为空，已回退为 404", ib.Port)
+			return nil
+		}
 		return map[string]interface{}{
 			"type":      "file",
-			"directory": ib.MasqueradePath,
+			"directory": directory,
 		}
 	case "string":
+		// sing-box：status_code 为 0 时不写状态码（即 200）；越界值会被 net/http 拒绝，
+		// 这里统一收敛到 200，避免自定义内容因状态码非法而返回失败。
+		code := ib.MasqueradeCode
+		if code < 100 || code > 599 {
+			code = 200
+		}
 		return map[string]interface{}{
 			"type":        "string",
-			"status_code": ib.MasqueradeCode,
+			"status_code": code,
 			"content":     ib.MasqueradeBody,
 		}
 	default:
+		// default / 空类型：不配置 masquerade，由核心返回 404
 		return nil
 	}
 }

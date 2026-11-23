@@ -131,7 +131,6 @@ type Inbound struct {
 	MasqueradeType    string // default / proxy / file / string
 	MasqueradeURL     string // 伪装地址，配合 proxy 类型使用
 	RewriteHost       bool   // 是否重写 Host
-	IgnoreTLSVerify   bool   // 跳过 TLS 验证
 	MasqueradePath    string // 伪装路径，配合 file 类型使用
 	MasqueradeCode    int    // 状态码，配合 string 类型使用
 	MasqueradeBody    string `gorm:"type:text"` // 伪装内容，配合 string 类型使用

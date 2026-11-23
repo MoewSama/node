@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
+	"path"
 	"strconv"
 	"strings"
 
@@ -89,6 +91,47 @@ func SaveInbound(c *gin.Context) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "最大包大小必须大于最小包大小"})
 				return
 			}
+		}
+	}
+
+	// Hysteria2 伪装：sing-box 的对象形式必须带 type（file / proxy / string），
+	// 参数缺失会生成无法启动的配置（核心校验失败后静默沿用旧配置，表现为伪装不生效），
+	// 因此在保存阶段就把非法组合挡掉。
+	if ib.Protocol == "hysteria" && ib.MasqueradeEnabled {
+		if ib.TLSType != "tls" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Hysteria2 伪装依赖 TLS 证书，请将安全类型设为 TLS"})
+			return
+		}
+		switch strings.TrimSpace(ib.MasqueradeType) {
+		case "", "default":
+			ib.MasqueradeType = "default"
+		case "proxy":
+			rawURL := strings.TrimSpace(ib.MasqueradeURL)
+			u, err := url.Parse(rawURL)
+			if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "伪装反向代理地址需为完整 URL，例如 https://www.example.com"})
+				return
+			}
+			ib.MasqueradeURL = rawURL
+		case "file":
+			directory := strings.TrimSpace(ib.MasqueradePath)
+			if directory == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "请填写伪装静态文件目录（服务器上的绝对路径）"})
+				return
+			}
+			if !path.IsAbs(directory) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "伪装静态文件目录需为绝对路径，例如 /var/www/html"})
+				return
+			}
+			ib.MasqueradePath = directory
+		case "string":
+			if ib.MasqueradeCode < 100 || ib.MasqueradeCode > 599 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "伪装自定义内容的状态码需在 100 - 599 之间"})
+				return
+			}
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "不支持的伪装类型: " + ib.MasqueradeType})
+			return
 		}
 	}
 

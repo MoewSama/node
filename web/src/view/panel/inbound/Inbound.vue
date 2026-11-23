@@ -91,7 +91,6 @@ const baseInbound = () => ({
     MasqueradeType: 'default',
     MasqueradeURL: '',
     RewriteHost: false,
-    IgnoreTLSVerify: false,
     MasqueradePath: '',
     MasqueradeCode: 200,
     MasqueradeBody: '',

@@ -162,15 +162,17 @@
                             <span class="form-label">重写 Host</span>
                             <Toggle v-model="form.RewriteHost" />
                         </div>
-                        <div class="form-row">
-                            <span class="form-label">跳过 TLS</span>
-                            <Toggle v-model="form.IgnoreTLSVerify" />
+                        <div class="form-tip">
+                            必须以 <b>http://</b> 或 <b>https://</b> 开头的完整 URL，且该地址需能被本机访问。
                         </div>
                     </template>
                     <template v-if="form.MasqueradeType === 'file'">
                         <div class="form-row">
                             <span class="form-label">目录路径</span>
                             <Input v-model="form.MasqueradePath" placeholder="/var/www/html" />
+                        </div>
+                        <div class="form-tip">
+                            填写服务器上的绝对路径（Docker 部署时为容器内路径），目录不存在时伪装会返回 404。
                         </div>
                     </template>
                     <template v-if="form.MasqueradeType === 'string'">
